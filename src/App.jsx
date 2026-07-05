@@ -39,4 +39,37 @@ Core takeaway:
 state lives in exactly one place (App). It's read and updated only where it's declared. To let a child trigger a change, you pass down a method as a prop (a "callback prop") — the child calls it, but the actual state update still only happens inside App.
 
 
+
+
+
+
+
+
+App sends message. but Parent has no props parameter??
+---
+Right — that's a class-component quirk. Parent.jsx doesn't even define a constructor, yet this.props.message still works inside render(). Here's why:
+
+Function components need an explicit parameter because props are just the function's first argument:
+
+
+function Parent(props) {
+  return <Child message={props.message} />;
+}
+Class components don't take props as a parameter to any of their methods. Instead, React's base React.Component class does this internally when it creates the instance:
+
+
+// (simplified, inside React itself)
+class Component {
+  constructor(props) {
+    this.props = props;
+  }
+}
+So every instance automatically gets this.props set to whatever was passed in JSX (<Parent message={...} />), before render() is ever called. You only need to write your own constructor(props) { super(props); } if you want to touch this.props inside the constructor itself (e.g. to set this.state based on a prop) — like App.jsx does:
+
+
+constructor(props) {
+  super(props);
+  this.state = { message: 'Hello from App!' };
+}
+Parent has no constructor and no need to touch props early, so it skips that boilerplate entirely and just reads this.props.message directly in render() — React already attached it to the instance by the time render() runs.
 */
